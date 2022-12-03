@@ -1,22 +1,16 @@
-require 'sqlite3'
+require './sqlite_budget'
 
 class BudgetingApp
 
   def initialize
-    login
     @total = 0
     @expenses_hash = Hash.new
-    get_total
-    menu
-  end
-
-  def login
     print "Enter username: "
     @user_name = gets.chomp
-    @expenses_hash[user_name] = @user_name
-    print "Enter password: "
-    @password = gets.chomp
-  end
+    get_total
+    menu
+    return 
+  end 
 
   def get_total
   	print "Current budget: £"
@@ -45,7 +39,8 @@ class BudgetingApp
         when "2"
           update_expense
         when "3"
-          puts @expenses_hash
+          my_array = executeSelectQuery("expenses.db", "select * from expense where name = '#{@user_name}'")
+          my_array.each {|expense| puts expense}
         when "4"
           puts "Current total: #{@total}\n"
         when "5"
