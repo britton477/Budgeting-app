@@ -1,9 +1,12 @@
+# Sqlite is used to store user information
 require './sqlite_budget'
 
+# Our application class
 class BudgetingApp
 
   def initialize
-    @expenses_hash = Hash.new
+    #Ask for username, run total and menu
+    @final_total = 0
     print "Enter username: "
     @user_name = gets.chomp
     incomeTotal
@@ -11,6 +14,7 @@ class BudgetingApp
   end 
 
   def incomeTotal
+    # Gets income budget unless user has already declared a budget
     user_budget = executeSelectQuery("expenses.db", "select * from budget where name = '#{@user_name}'")
     if user_budget == []
       print "Current income: £"
@@ -21,6 +25,7 @@ class BudgetingApp
   end
 
   def menu
+    # Menu function is used to access the functions of the app
     while true
       puts "\n"
       puts "Welcome #{@user_name}"
@@ -38,16 +43,19 @@ class BudgetingApp
 
       choice = gets.chomp
       case choice
+        # Case is used for multiple options
         when "1"
           addExpenses
         when "2"
           updateExpense
         when "3"
+          # Code block returns all expenses in expense database
           show_expense = executeSelectQuery("expenses.db", "select * from expense where name = '#{@user_name}'")
-          show_expense.each {|expense| puts expense}
+          show_expense.each {|expense| puts "#{expense["ex_name"]}: £#{expense["ex_value"]}"}
         when "4"
+          # Code block returns all budgets from budget database
           show_budget = executeSelectQuery("expenses.db", "select * from budget where name = '#{@user_name}'")
-          show_budget.each {|budget| puts budget}
+          show_budget.each {|budget| puts "#{budget["budget_name"]}: £#{budget["budget_value"]}"}
         when "5"
           remainingBudget
         when "6"
@@ -57,6 +65,7 @@ class BudgetingApp
   end
 
   def repeat
+    # Repeat function so user can repeat functions
     puts 'Repeat?: "Y" or "N"'
     result = gets.chomp.upcase
     if result[0] == "N"
@@ -67,7 +76,7 @@ class BudgetingApp
   end
 
   def addExpenses
-
+    # This function takes input and adds to a database
     flag = true
     while flag
       print "Name of expense: "
@@ -76,25 +85,24 @@ class BudgetingApp
       value = gets.chomp.to_f
       executeQuery("expenses.db", "INSERT INTO expense ('name','ex_name','ex_value') 
         VALUES ('#{@user_name}','#{expense}','#{value}')")
-      #@total -= value
       flag = false if repeat
     end
     puts "New total: £#{@total}"
   end
 
   def updateExpense
-
+    # Takes input and searches expense database
     flag = true
     while flag
       print "Expense to update: "
       search = gets.chomp
       expense_search = executeSelectQuery("expenses.db", "SELECT * from expense where ex_name = '#{search}'")
+      # Will only continue if the search returns an array with a vlue
       if expense_search != []
         print "New value: £"
         new_value = gets.chomp.to_f
         executeQuery("expenses.db", "UPDATE expense SET ex_value = '#{new_value}' where ex_name = '#{search}'")
         puts "Expense updated"
-        puts "New total: £#{@total}"
       else 
         puts "Error: Expense not found"
       end
@@ -102,14 +110,12 @@ class BudgetingApp
     end
   end
 
-  #def remainingBudget
-
-    #all_expense = executeSelectQuery("expenses.db", "SELECT ex_value from expense")
-    #total = executeSelectQuery("expenses.db", "SELECT budget_value from budget where name = '#{@user_name}' and budget_name = 'Income'")
-    #puts all_expense
-    #puts total
-    #final_total = all_expense.each {|expense| total -= expense}
-
+  def remainingBudget
+    # Subtracts the total of all expense database from income 
+    all_expense = executeSelectQuery("expenses.db", "SELECT SUM(ex_value) FROM expense")
+    total = executeSelectQuery("expenses.db", "SELECT budget_value from budget where name = '#{@user_name}' and budget_name = 'Income'")
+    @final_total = total[0]["budget_value"] - all_expense[0]["SUM(ex_value)"]
+    puts "Remaining budget: £#{@final_total.round(2)}"
   end
 end
 
