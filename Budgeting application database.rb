@@ -45,18 +45,23 @@ class BudgetingApp
       case choice
         # Case is used for multiple options
         when "1"
+          clear
           addExpenses
         when "2"
+          clear
           updateExpense
         when "3"
+          clear
           # Code block returns all expenses in expense database
           show_expense = executeSelectQuery("expenses.db", "select * from expense where name = '#{@user_name}'")
           show_expense.each {|expense| puts "#{expense["ex_name"]}: £#{expense["ex_value"]}"}
         when "4"
+          clear
           # Code block returns all budgets from budget database
           show_budget = executeSelectQuery("expenses.db", "select * from budget where name = '#{@user_name}'")
           show_budget.each {|budget| puts "#{budget["budget_name"]}: £#{budget["budget_value"]}"}
         when "5"
+          clear
           remainingBudget
         when "6"
           break
@@ -73,6 +78,11 @@ class BudgetingApp
     else
       return false
     end
+  end
+
+  def clear
+    # Clears the screen
+      system("clear") || system("cls")
   end
 
   def addExpenses
