@@ -6,7 +6,6 @@ class BudgetingApp
 
   def initialize
     #Ask for username, run total and menu
-    @final_total = 0
     print "Enter username: "
     @user_name = gets.chomp
     incomeTotal
@@ -35,9 +34,10 @@ class BudgetingApp
       puts "1) Add expenses"
       puts "2) Update expenses"
       puts "3) Display current expenses"
-      puts "4) Display current budgets"
-      puts "5) Display remaining budget"
-      puts "6) Exit"
+      puts "4) Delete expense"
+      puts "5) Display current budgets"
+      puts "6) Display remaining budget"
+      puts "7) Exit"
       puts "__________________________________________"
       print ": "
 
@@ -52,18 +52,24 @@ class BudgetingApp
           updateExpense
         when "3"
           clear
-          # Code block returns all expenses in expense database
+          # Code block returns all expenses in expense database and the total of the expenses
           show_expense = executeSelectQuery("expenses.db", "select * from expense where name = '#{@user_name}'")
           show_expense.each {|expense| puts "#{expense["ex_name"]}: £#{expense["ex_value"]}"}
+          all_expense = executeSelectQuery("expenses.db", "SELECT SUM(ex_value) FROM expense where name = '#{@user_name}'")
+          all_expense.each {|total| puts "Total: £#{total["SUM(ex_value)"]}"}
         when "4"
+          clear
+          delExpense
+        when "5"
           clear
           # Code block returns all budgets from budget database
           show_budget = executeSelectQuery("expenses.db", "select * from budget where name = '#{@user_name}'")
           show_budget.each {|budget| puts "#{budget["budget_name"]}: £#{budget["budget_value"]}"}
-        when "5"
+        when "6"
           clear
           remainingBudget
-        when "6"
+        when "7"
+          clear
           break
       end
     end
@@ -100,8 +106,26 @@ class BudgetingApp
     puts "New total: £#{@total}"
   end
 
+  def delExpense
+     # Takes input and deletes expense if found
+     flag = true
+     while flag
+        print "Expense to delete: "
+        search = gets.chomp
+        expense_search = executeSelectQuery("expenses.db", "SELECT * from expense where ex_name = '#{search}'")
+      # Will only continue if the search returns an array with a vlue
+      if expense_search != []
+        executeQuery("expenses.db", "DELETE from expense WHERE ex_name = '#{search}'")
+        puts "Expense deleted"
+      else
+        puts "Error: Expense not found"
+      end
+      flag = false if repeat
+    end
+  end
+
   def updateExpense
-    # Takes input and searches expense database
+    # Takes input and searches expense database to update value
     flag = true
     while flag
       print "Expense to update: "
@@ -122,10 +146,10 @@ class BudgetingApp
 
   def remainingBudget
     # Subtracts the total of all expense database from income 
-    all_expense = executeSelectQuery("expenses.db", "SELECT SUM(ex_value) FROM expense")
+    all_expense = executeSelectQuery("expenses.db", "SELECT SUM(ex_value) FROM expense where name = '#{@user_name}'")
     total = executeSelectQuery("expenses.db", "SELECT budget_value from budget where name = '#{@user_name}' and budget_name = 'Income'")
-    @final_total = total[0]["budget_value"] - all_expense[0]["SUM(ex_value)"]
-    puts "Remaining budget: £#{@final_total.round(2)}"
+    final_total = total[0]["budget_value"] - all_expense[0]["SUM(ex_value)"]
+    puts "Remaining budget: £#{final_total.round(2)}"
   end
 end
 
